@@ -1,0 +1,12 @@
+name: paleoglac-dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python
+  - jupyterlab
+  - pandas
+  - geoutils
+  - xdem
+  - scikit-image
+  - metpy

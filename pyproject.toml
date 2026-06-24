@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = 'paleoglac'
+authors = [
+    {name='Bob McNabb', email='robertmcnabb@gmail.com'},
+]
+description = "a python package for paleoglacier reconstruction"
+readme = "README.md"
+license = "MIT"
+classifiers = [
+      'Intended Audience :: Science/Research',
+      'Natural Language :: English',
+      'Programming Language :: Python :: 3.11',
+      'Programming Language :: Python :: 3.12',
+      'Programming Language :: Python :: 3.13',
+      'Programming Language :: Python :: 3.14',
+      'Topic :: Scientific/Engineering :: GIS',
+]
+requires-python = ">=3.11"
+dependencies = [
+      'pandas',
+      'geoutils',
+      'xdem',
+      'scikit-image',
+      'metpy',
+
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/iamdonovan/paleoglac"
+"Bug Tracker" = "https://github.com/iamdonovan/paleoglac/issues"
+Repository = "https://github.com/iamdonovan/paleoglac.git"
+
+
+[project.scripts]
+
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+
+[tool.setuptools_scm]
