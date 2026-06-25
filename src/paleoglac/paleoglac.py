@@ -19,9 +19,6 @@ from typing import Any, Literal
 from . import ela, surface
 
 
-# TODO: make sure that operations like crop, reproject project/preserve these attributes, if set
-# easiest might be to make these properties, like glacier_mask, and return them on the fly?
-# otherwise, set these to None at initialization (other than outline and mask)
 glac_attrs = ('ela',
               'equilibrium_line'
               'ablation_area',
@@ -82,8 +79,15 @@ class PaleoGlac(gu.Raster):
         else:
             out_crs = dem_crs
 
-        # attributes should be: surface elevation (data from above)
-        # load thickness grid -> thickness, bed elevation?
+        # initialize empty values if they don't already exist
+        if not isinstance(filename_or_dataset, PaleoGlac):
+            self._ela = None
+            self._ablation_area = None
+            self._ablation_area_mask = None
+            self._equilibrium_line = None
+            self._aar = None
+            self._paleo_surface = None
+
         if geom is not None:
             self.glacier_outline = gu.Vector(geom)
 
@@ -102,13 +106,6 @@ class PaleoGlac(gu.Raster):
             if self.crs != out_crs and res is not None:
                 self.reproject(crs=out_crs, res=res, inplace=True)
 
-        # initialize empty values if they don't already exist
-        if not isinstance(filename_or_dataset, PaleoGlac):
-            self._ela = None
-            self._ablation_area = None
-            self._ablation_area_mask = None
-            self._equilibrium_line = None
-            self._aar = None
 
     @property
     def glacier_outline(self) -> gu.Vector:
@@ -172,6 +169,25 @@ class PaleoGlac(gu.Raster):
         abl_area = self.ablation_area.area.sum()
         return (total_area - abl_area) / total_area
 
+    @property
+    def paleo_surface(self: PaleoGlac) -> RasterType:
+        return self._paleo_surface
+
+    @paleo_surface.setter
+    def paleo_surface(self: PaleoGlac, surf: RasterType) -> None:
+        self._paleo_surface = surf
+
+    @property
+    def elev_change(self: PaleoGlac) -> RasterType:
+        if self._paleo_surface is not None:
+            return self._paleo_surface - self
+        else:
+            raise ValueError("Surface must be reconstructed before calculating elevation change.")
+
+    @property
+    def volume_change(self: PaleoGlac) -> RasterType:
+        return self.elev_change.data.sum() * self.res[0] * self.res[1]
+
     def reproject(
             self: PaleoGlac,
             ref: RasterType | str | None = None,
@@ -212,11 +228,17 @@ class PaleoGlac(gu.Raster):
             # if the ela is already set, copy it over
             out_obj.ela = self.ela
 
+            if self.paleo_surface is not None:
+                out_obj.paleo_surface = self.paleo_surface.reproject(out_obj)
+
             return out_obj
 
         else:
             super().reproject(**inargs)
             self.update_outline_masks(crs)
+
+            if self.paleo_surface is not None:
+                self.paleo_surface = self.paleo_surface.reproject(self)
 
     def crop(
             self: PaleoGlac,
@@ -239,10 +261,16 @@ class PaleoGlac(gu.Raster):
             # if the ela is already set, copy it over
             out_obj.ela = self.ela
 
+            if self.paleo_surface is not None:
+                out_obj.paleo_surface = self.paleo_surface.crop(out_obj)
+
             return out_obj
         else:
             super().crop(**inargs)
             self.update_outline_masks(None)
+            if self.paleo_surface is not None:
+                self.paleo_surface = self.paleo_surface.crop(self)
+
             return None
 
     def update_outline_masks(
@@ -258,8 +286,33 @@ class PaleoGlac(gu.Raster):
             self.glacier_outline = self.glacier_outline.to_crs(crs)
 
     # different ways of interpolating the surface
-    def reconstruct_surf(self, method='carrivick', **kwargs):
-        pass
+    def reconstruct_surf(
+            self: PaleoGlac,
+            set_val: bool = True,
+            method: Literal['carrivick'] ='carrivick',
+            **kwargs) -> RasterType | None:
+        """
+        Reconstruct the paleo surface using the given methods. For a list of available methods, see
+        paleoglac.surface.available_methods.
+
+        :param set_val: set the interpolated surface as object's .paleo_surface property.
+        :param method: the name of the method to use for interpolating the paleo surface.
+        :param kwargs: additional kwargs for the chosen method.
+        :return: the paleo surface, if set_val is False
+        """
+        #method determines which algorithm we use
+        #methods: carrivick, ...
+        methods = {
+            'carrivick': surface.carrivick_surface,
+        }
+
+        surf = methods[method](self, self.ablation_area, **kwargs)
+
+        if set_val:
+            self.paleo_surface = surf
+            return None
+        else:
+            return surf
 
     # implement different methods of getting the ELA
     def get_ela(
@@ -300,8 +353,8 @@ class PaleoGlac(gu.Raster):
 
         if set_val:
             self.ela = ela_val
-
-        return ela_val
+        else:
+            return ela_val
 
         # calculate using the surface dem
     def area_altitude_distribution(self,
