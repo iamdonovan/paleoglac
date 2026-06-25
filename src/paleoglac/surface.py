@@ -108,7 +108,7 @@ def carrivick_surface(
     interp_surf[surf_mask.data] = ZZ
     # interp_surf = pc.grid(dem, resampling='cubic', dist_nodata_pixel=max(dem.width, dem.height))
 
-    interp_surf = dem.copy(new_array=interp_surf)
+    interp_surf = gu.Raster(dem.copy(new_array=interp_surf))
     interp_surf.set_mask(~surf_mask)
 
     diff = interp_surf.data.data - dem.data.data
