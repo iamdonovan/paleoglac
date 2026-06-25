@@ -59,6 +59,7 @@ class PaleoGlac(gu.Raster):
               PaleoGlac.reconstruct_surface
             - elev_change: the elevation difference between the current and reconstructed surface
             - volume_change: the volume difference between the current and reconstructed surface
+            - mean_thick_change: the mean thickness change (i.e., mean of all elevation changes)
 
         :param filename_or_dataset: Path to file or Rasterio dataset representing the glacier surface elevation
         :param geom: the glacier geometry, in the form of a geoutils Vector or geopandas GeoSeries / GeoDataFrame
@@ -187,6 +188,10 @@ class PaleoGlac(gu.Raster):
     @property
     def volume_change(self: PaleoGlac) -> RasterType:
         return self.elev_change.data.sum() * self.res[0] * self.res[1]
+
+    @property
+    def mean_thick_change(self: PaleoGlac) -> float:
+        return self.elev_change.data.mean()
 
     def reproject(
             self: PaleoGlac,
