@@ -10,6 +10,10 @@ from geoutils.raster import RasterType
 from geoutils.vector import VectorType
 
 
+available_methods = [
+    'carrivick_surface'
+]
+
 def ablation_area(
         dem: RasterType,
         glac: VectorType,
@@ -54,7 +58,9 @@ def carrivick_surface(
         simplify: bool = True
 ) -> RasterType:
     """
-    Reconstruct the paleo glacier surface using the method described in ..
+    Reconstruct the paleo glacier surface using the method described in, e.g., Carrivick et al., 2023,
+    https://doi.org/10.1029/2023GL103950
+
     In short:
 
         1. Ablation area surface is interpolated using natural neighbor interpolation from elevations on
