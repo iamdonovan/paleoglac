@@ -56,9 +56,9 @@ class PaleoGlac(gu.Raster):
             - equilibrium_line: a vector representation of the equilibrium line
             - aar: the glacier accumulation area ratio
             - paleo_surface: the reconstructed paleo surface. For details on implemented methods, see
-              PaleoGlac.reconstruct_surface [WIP]
-            - elev_change: the elevation difference between the current and reconstructed surface [WIP]
-            - vol_change: the volume difference between the current and reconstructed surface [WIP]
+              PaleoGlac.reconstruct_surface
+            - elev_change: the elevation difference between the current and reconstructed surface
+            - volume_change: the volume difference between the current and reconstructed surface
 
         :param filename_or_dataset: Path to file or Rasterio dataset representing the glacier surface elevation
         :param geom: the glacier geometry, in the form of a geoutils Vector or geopandas GeoSeries / GeoDataFrame
